@@ -7,33 +7,37 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
-
         public Vector2 Velocity;
         public Vector2 Heading;
         public Vector2 Side;
-
-        public GameObject TempTarget;
 
         public float Mass { get; set; }
         public float MaxSpeed { get; set; }
         public float MaxForce { get; set; }
         public float MaxTurnRate { get; set; }
 
-        public SteeringBehaviors SteeringBehaviors = new SteeringBehaviors();
+        private SteeringBehaviors SteeringBehaviors;
 
         // Use this for initialization
         void Start()
         {
-            MaxTurnRate = 1.0f;
+            MaxTurnRate = 5.0f;
             Heading = new Vector2(0.0f, 1.0f);
+            SteeringBehaviors = GetComponent<SteeringBehaviors>();
+            Mass = 1.0f;
+            MaxSpeed = 0.05f;
         }
 
         // Update is called once per frame
         void Update()
         {
-            //Vector2 SteeringForce = SteeringBehaviors.Calculate();
-
-            RotateHeadingToFacePosition(TempTarget.transform.position);
+            Vector2 steeringForce = SteeringBehaviors.Calculate();
+            Vector2 acceleration = steeringForce / Mass;
+            Velocity += acceleration * Time.fixedDeltaTime;
+            Velocity = Vector2.ClampMagnitude(Velocity, MaxSpeed);
+            Move();
+            
+            RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
         }
 
@@ -48,25 +52,25 @@ namespace SteeringBehaviorsNS
                 angle = Mathf.Min(angle, MaxTurnRate);
             else
                 angle = -Mathf.Min(-angle, MaxTurnRate);
-
-            //Heading = toTarget;
+            
             Heading.Normalize();
             
             Heading = Quaternion.Euler(0, 0, angle) * Heading;
-
-
+            
             return false;
         }
 
         bool RotateBoidToMatchHeading()
         {
-            if (transform.rotation.)
-                return true;
-
             transform.rotation = Quaternion.EulerRotation(0,0,-Mathf.Atan2(Heading.x, Heading.y));
 
             return false;
         }
 
+        void Move()
+        {
+            Vector2 newPosition = (Vector2)transform.position + Velocity;
+            transform.position = newPosition;
+        }
     }
 }
