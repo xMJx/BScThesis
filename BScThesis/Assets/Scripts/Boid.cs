@@ -21,11 +21,11 @@ namespace SteeringBehaviorsNS
         // Use this for initialization
         void Start()
         {
-            MaxTurnRate = 5.0f;
+            MaxTurnRate = 20.0f;
             Heading = new Vector2(0.0f, 1.0f);
             SteeringBehaviors = GetComponent<SteeringBehaviors>();
             Mass = 1.0f;
-            MaxSpeed = 0.05f;
+            MaxSpeed = 4.0f;
         }
 
         // Update is called once per frame
@@ -69,7 +69,7 @@ namespace SteeringBehaviorsNS
 
         void Move()
         {
-            Vector2 newPosition = (Vector2)transform.position + Velocity;
+            Vector2 newPosition = (Vector2)transform.position + Velocity * Time.fixedDeltaTime;
             transform.position = newPosition;
         }
     }

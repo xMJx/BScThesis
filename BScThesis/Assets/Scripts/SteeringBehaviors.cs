@@ -8,18 +8,28 @@ namespace SteeringBehaviorsNS
 
     public class SteeringBehaviors : MonoBehaviour
     {
-        public enum Behaviors { Seek, Flee, Arrive }
-
+        public enum Deceleration { light, moderate, strong};
         private Vector2 steeringForce;
-        public Vector2 targetPosition;
         private Boid boid;
-        private float weight;
-        public Behaviors behaviors;
+
+        public Vector2 SeekTargetPosition;
+        public bool SeekOn;
+        public float SeekWeight;
+
+        public Vector2 FleeThreatPosition;
+        public bool FleeOn;
+        public float FleeWeight;
+        public float PanicRange;
+
+        public Vector2 ArriveTargetPosition;
+        public bool ArriveOn;
+        public Deceleration DecelerationRate;
+
+        
         
         public SteeringBehaviors()
         {
-            weight = 1.0f;
-            behaviors = Behaviors.Seek;
+
         }
 
         // Use this for initialization
@@ -44,44 +54,53 @@ namespace SteeringBehaviorsNS
 
         private Vector2 CalculatePrioritized()
         {
-            switch (behaviors)
+            if (SeekOn)
             {
-                case Behaviors.Seek:
-                    {
-                        steeringForce += weight * Seek(targetPosition);
-                        break;
-                    }
-                case Behaviors.Flee:
-                    {
-                        steeringForce += weight * Flee(targetPosition);
-                        break;
-                    }
-                case Behaviors.Arrive:
-                    {
-                        steeringForce += weight * Arrive(targetPosition);
-                        break;
-                    }
-                default:
-                    break;
+                steeringForce += SeekWeight * Seek(SeekTargetPosition);
+            }
+            if (FleeOn)
+            {
+                steeringForce += FleeWeight * Flee(FleeThreatPosition);
+            }
+            if (ArriveOn)
+            {
+                steeringForce += Arrive(ArriveTargetPosition, DecelerationRate);
             }
             return steeringForce;
         }
 
         private Vector2 Seek (Vector2 target)
         {
-            Vector2 ret = (target - (Vector2)transform.position).normalized * boid.MaxSpeed;
-            return ret;
+            Vector2 desiredVelocity = (target - (Vector2)transform.position).normalized * boid.MaxSpeed;
+            return desiredVelocity - boid.Velocity;
         }
 
         private Vector2 Flee (Vector2 threat)
         {
-            Vector2 ret = ((Vector2)transform.position - threat).normalized * boid.MaxSpeed;
-            return (Vector2)transform.position - threat;
+            if ((threat-(Vector2)transform.position).magnitude < PanicRange)
+            {
+                Vector2 desiredVelocity = ((Vector2)transform.position - threat).normalized * boid.MaxSpeed;
+                return desiredVelocity - boid.Velocity;
+            }
+            else
+            {
+                return new Vector2(0,0);
+            }
         }
 
-        private Vector2 Arrive (Vector2 target)
+        private Vector2 Arrive(Vector2 target, Deceleration decelerationRate)
         {
-            throw new NotImplementedException();
+            if ((target - (Vector2)transform.position).magnitude > 0)
+            {
+                float speed = (target - (Vector2)transform.position).magnitude / ((int)decelerationRate * 0.3f);
+
+                Vector2 desiredVelocity = (target - (Vector2)transform.position).normalized * speed;
+                return desiredVelocity - boid.Velocity;
+            }
+            else
+            {
+                return new Vector2(0, 0);
+            }
         }
 
 
@@ -115,39 +134,39 @@ namespace SteeringBehaviorsNS
             throw new NotImplementedException();
         }
 
-        public void SeekOn()
-        {
-            throw new NotImplementedException();
-        }
+        //public void SeekOn()
+        //{
+        //    throw new NotImplementedException();
+        //}
 
-        public void FleeOn()
-        {
-            throw new NotImplementedException();
+        //public void FleeOn()
+        //{
+        //    throw new NotImplementedException();
 
-        }
+        //}
 
-        public void ArriveOn()
-        {
-            throw new NotImplementedException();
+        //public void ArriveOn()
+        //{
+        //    throw new NotImplementedException();
 
-        }
+        //}
 
-        public void SeekOff()
-        {
-            throw new NotImplementedException();
+        //public void SeekOff()
+        //{
+        //    throw new NotImplementedException();
 
-        }
+        //}
 
-        public void FleeOff()
-        {
-            throw new NotImplementedException();
+        //public void FleeOff()
+        //{
+        //    throw new NotImplementedException();
 
-        }
+        //}
 
-        public void ArriveOff()
-        {
-            throw new NotImplementedException();
+        //public void ArriveOff()
+        //{
+        //    throw new NotImplementedException();
 
-        }
+        //}
     }
 }
