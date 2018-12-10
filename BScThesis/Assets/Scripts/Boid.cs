@@ -7,36 +7,57 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
+        public List<GameObject> Others { get; set; }
+
         public Vector2 Velocity;
         public Vector2 Heading;
         public Vector2 Side;
 
-        public float Mass { get; set; }
-        public float MaxSpeed { get; set; }
-        public float MaxForce { get; set; }
-        public float MaxTurnRate { get; set; }
+        public float Mass;
+        public float MaxSpeed;
+        public float MaxForce;
+        public float MaxTurnRate;
 
-        private SteeringBehaviors SteeringBehaviors;
+        private SteeringBehaviors steeringBehaviors;
 
         // Use this for initialization
         void Start()
         {
-            MaxTurnRate = 20.0f;
+            //Mass = 1.0f;
+            //MaxSpeed = 4.0f;
+            //MaxForce = 4.0f;
+            //MaxTurnRate = 20.0f;
+
             Heading = new Vector2(0.0f, 1.0f);
-            SteeringBehaviors = GetComponent<SteeringBehaviors>();
-            Mass = 1.0f;
-            MaxSpeed = 4.0f;
+
+            steeringBehaviors = GetComponent<SteeringBehaviors>();
+
+
+            Others = new List<GameObject>();
+            Others.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
+            Others.Remove(this.gameObject);
         }
 
         // Update is called once per frame
         void Update()
         {
-            Vector2 steeringForce = SteeringBehaviors.Calculate();
+
+            // get F
+            Vector2 steeringForce = steeringBehaviors.Calculate();
+
+            // a = F/m
             Vector2 acceleration = steeringForce / Mass;
+            
+            // v = v + at
             Velocity += acceleration * Time.fixedDeltaTime;
+
+            // v <= vmax
             Velocity = Vector2.ClampMagnitude(Velocity, MaxSpeed);
+
+            // s = s + vt
             Move();
             
+            // wizualizacja
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
         }
