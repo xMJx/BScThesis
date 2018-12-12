@@ -7,7 +7,8 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
-        public List<GameObject> Others { get; set; }
+        public List<GameObject> OtherBoids { get; set; }
+        public List<Wall> Walls { get; set; }
 
         public Vector2 Velocity;
         public Vector2 Heading;
@@ -23,25 +24,24 @@ namespace SteeringBehaviorsNS
         // Use this for initialization
         void Start()
         {
-            //Mass = 1.0f;
-            //MaxSpeed = 4.0f;
-            //MaxForce = 4.0f;
-            //MaxTurnRate = 20.0f;
-
             Heading = new Vector2(0.0f, 1.0f);
 
             steeringBehaviors = GetComponent<SteeringBehaviors>();
 
+            Walls = new List<Wall>();
+            foreach (GameObject o in GameObject.FindGameObjectsWithTag("SceneWall"))
+            {
+                Walls.Add(o.GetComponent<Wall>());
+            }
 
-            Others = new List<GameObject>();
-            Others.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
-            Others.Remove(this.gameObject);
+            OtherBoids = new List<GameObject>();
+            OtherBoids.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
+            OtherBoids.Remove(this.gameObject);
         }
 
         // Update is called once per frame
         void Update()
         {
-
             // get F
             Vector2 steeringForce = steeringBehaviors.Calculate();
 
@@ -60,6 +60,12 @@ namespace SteeringBehaviorsNS
             // wizualizacja
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
+        }
+
+        void Move()
+        {
+            Vector2 newPosition = (Vector2)transform.position + Velocity * Time.fixedDeltaTime;
+            transform.position = newPosition;
         }
 
         bool RotateHeadingToFacePosition(Vector2 target)
@@ -86,12 +92,6 @@ namespace SteeringBehaviorsNS
             transform.rotation = Quaternion.EulerRotation(0,0,-Mathf.Atan2(Heading.x, Heading.y));
 
             return false;
-        }
-
-        void Move()
-        {
-            Vector2 newPosition = (Vector2)transform.position + Velocity * Time.fixedDeltaTime;
-            transform.position = newPosition;
         }
     }
 }
