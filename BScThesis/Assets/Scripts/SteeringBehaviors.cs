@@ -38,9 +38,9 @@ namespace SteeringBehaviorsNS
         // Use this for initialization
         void Start()
         {
-            WanderRadius = 5.0f;
-            WanderDistance = 6.0f;
-            WanderJitter = 30;
+            WanderRadius = 3.0f;
+            WanderDistance = 4.0f;
+            WanderJitter = 6;
             boid = GetComponent<Boid>();
 
             //stuff for the wander behavior
@@ -49,6 +49,9 @@ namespace SteeringBehaviorsNS
             //create a vector to a target position on the wander circle
             WanderTarget = new Vector2(WanderRadius * Mathf.Cos(theta),
                                         WanderRadius * Mathf.Sin(theta));
+
+            // debug 
+            WanderTarget = Vector2.zero;
         }
 
         // Update is called once per frame
@@ -67,7 +70,7 @@ namespace SteeringBehaviorsNS
 
         private Vector2 CalculatePrioritized()
         {
-            //React(boid.OtherBoids);
+            React(boid.OtherBoids);
             steeringForce += WanderWeight * Wander();
 
             return steeringForce;
@@ -108,23 +111,20 @@ namespace SteeringBehaviorsNS
         private Vector2 Wander()
         {
             WanderTarget += new Vector2((Random.value * 2 - 1) * WanderJitter, (Random.value * 2 - 1) * WanderJitter);
-            WanderTarget = WanderTarget.normalized * WanderRadius;
+            WanderTarget = WanderTarget.normalized * WanderRadius; 
             WanderTarget += boid.Heading.normalized * WanderDistance;
 
-            WanderTarget = (Vector2)boid.transform.position + WanderTarget;
-
             // debug
-            wanderRenderer = GetComponent<LineRenderer>();
-            wanderRenderer.SetPositions(new Vector3[2] { boid.transform.position, WanderTarget });
+            //wanderRenderer = GetComponent<LineRenderer>();
+            //wanderRenderer.SetPositions(new Vector3[2] { boid.transform.position, boid.transform.position + (Vector3)WanderTarget });
 
-            return WanderTarget - (Vector2)boid.transform.position;
+            return WanderTarget;
         }
-
-        // WIP mocno
+        
         private Vector2 WallAvoidance()
         {
             CreateFeelers();
-            RenderFeelers(); // debug
+            //RenderFeelers(); // debug
 
             if (boid.Walls != null)
             {
