@@ -28,6 +28,8 @@ namespace SteeringBehaviorsNS
         LineRenderer feelerRenderer; // debug
         LineRenderer wanderRenderer; // debug
 
+        public enum DebugRenderType { none, feelers, wanderTarget };
+        public DebugRenderType DebugRender;
 
 
         public SteeringBehaviors()
@@ -90,7 +92,7 @@ namespace SteeringBehaviorsNS
                 // Food
                 if (other.GetComponent<Food>() && this.GetComponent<Threat>())
                 {
-                    steeringForce += this.Seek(other.transform.position);
+                    steeringForce += SeekWeight * this.Seek(other.transform.position);
                 }
             }
         }
@@ -115,8 +117,12 @@ namespace SteeringBehaviorsNS
             WanderTarget += boid.Heading.normalized * WanderDistance;
 
             // debug
-            //wanderRenderer = GetComponent<LineRenderer>();
-            //wanderRenderer.SetPositions(new Vector3[2] { boid.transform.position, boid.transform.position + (Vector3)WanderTarget });
+
+            if (DebugRender == DebugRenderType.wanderTarget)
+            {
+                wanderRenderer = GetComponent<LineRenderer>();
+                wanderRenderer.SetPositions(new Vector3[2] { boid.transform.position, boid.transform.position + (Vector3)WanderTarget });
+            }
 
             return WanderTarget;
         }
@@ -124,7 +130,10 @@ namespace SteeringBehaviorsNS
         private Vector2 WallAvoidance()
         {
             CreateFeelers();
-            //RenderFeelers(); // debug
+            if (DebugRender == DebugRenderType.feelers)
+            {
+                RenderFeelers(); // debug
+            }
 
             if (boid.Walls != null)
             {
