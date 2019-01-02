@@ -109,7 +109,6 @@ namespace SteeringBehaviorsNS
             return desiredVelocity - boid.Velocity;
         }
 
-        // WIP troche (przetestowac?)
         private Vector2 Wander()
         {
             WanderTarget += new Vector2((Random.value * 2 - 1) * WanderJitter, (Random.value * 2 - 1) * WanderJitter);
@@ -236,8 +235,7 @@ namespace SteeringBehaviorsNS
             }
             feelerRenderer.SetPositions(points);
         }
-
-        // needs debug
+        
         private bool LineIntersection2D(Vector2 A,
                                        Vector2 B,
                                        Vector2 C,
