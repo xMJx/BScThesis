@@ -1,0 +1,22 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+#pragma kernel SeekLeft
+
+float DeltaTime;
+
+struct BoidData
+{
+    float2 pos;
+    float2 vel;
+};
+
+RWStructuredBuffer<BoidData> BoidDataBuffer;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    BoidData bd = BoidDataBuffer[id.xy];
+
+
+    // TODO: insert actual code here!
+}
