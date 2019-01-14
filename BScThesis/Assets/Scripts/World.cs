@@ -40,13 +40,22 @@ namespace SteeringBehaviorsNS
 
                 boidsData[i] = bd;
             }
+
             boidDataBuffer.SetData(boidsData);
 
             // compute shader here
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
+            SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
 
+            SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 
+            boidDataBuffer.GetData(boidsData);
+
+            for (int i=0; i<boids.Count; i++)
+            {
+                boids[i].transform.position = boidsData[i].pos;
+            }
         }
     }
 }

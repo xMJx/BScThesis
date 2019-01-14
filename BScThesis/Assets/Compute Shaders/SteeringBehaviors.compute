@@ -1,8 +1,11 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
-#pragma kernel SeekLeft
+﻿#pragma kernel CSMain
 
 float DeltaTime;
+
+float WanderRadius;
+float WanderDistance;
+float WanderJitter;
+
 
 struct BoidData
 {
@@ -12,10 +15,15 @@ struct BoidData
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
 
-[numthreads(8,8,1)]
+void Move(uint3 id)
+{
+    BoidDataBuffer[id.x].pos += BoidDataBuffer[id.x].vel * DeltaTime;
+}
+
+[numthreads(8,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    BoidData bd = BoidDataBuffer[id.xy];
+    Move(id);
 
 
     // TODO: insert actual code here!

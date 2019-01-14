@@ -55,7 +55,7 @@ namespace SteeringBehaviorsNS
             Velocity = Vector2.ClampMagnitude(Velocity, MaxSpeed);
 
             // s = s + vt
-            Move();
+            //Move();
             
             // wizualizacja
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
