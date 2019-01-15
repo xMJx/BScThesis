@@ -25,8 +25,9 @@ namespace SteeringBehaviorsNS
         private Boid boid;
 
         private List<Vector2> feelers;
-        LineRenderer feelerRenderer; // debug
-        LineRenderer wanderRenderer; // debug
+
+        LineRenderer feelerRenderer;
+        LineRenderer wanderRenderer;
 
         public enum DebugRenderType { none, feelers, wanderTarget };
         public DebugRenderType DebugRender;
@@ -120,6 +121,7 @@ namespace SteeringBehaviorsNS
             if (DebugRender == DebugRenderType.wanderTarget)
             {
                 wanderRenderer = GetComponent<LineRenderer>();
+                wanderRenderer.positionCount = 2;
                 wanderRenderer.SetPositions(new Vector3[2] { boid.transform.position, boid.transform.position + (Vector3)WanderTarget });
             }
 

@@ -49,7 +49,7 @@ namespace SteeringBehaviorsNS
             Vector2 acceleration = steeringForce / Mass;
             
             // v = v + at
-            Velocity += acceleration * Time.fixedDeltaTime;
+            Velocity += acceleration * Time.deltaTime;
 
             // v <= vmax
             Velocity = Vector2.ClampMagnitude(Velocity, MaxSpeed);
@@ -64,7 +64,7 @@ namespace SteeringBehaviorsNS
 
         void Move()
         {
-            Vector2 newPosition = (Vector2)transform.position + Velocity * Time.fixedDeltaTime;
+            Vector2 newPosition = (Vector2)transform.position + Velocity * Time.deltaTime;
             transform.position = newPosition;
         }
 

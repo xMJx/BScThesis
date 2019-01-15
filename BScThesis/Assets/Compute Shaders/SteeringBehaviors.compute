@@ -20,9 +20,21 @@ void Move(uint3 id)
     BoidDataBuffer[id.x].pos += BoidDataBuffer[id.x].vel * DeltaTime;
 }
 
+float2 Calculate(uint3 id)
+{
+    float2 SteeringForce = {0,0};
+
+
+
+    return SteeringForce;
+}
+
 [numthreads(8,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
+    // find neighbours
+    // c
+
     Move(id);
 
 

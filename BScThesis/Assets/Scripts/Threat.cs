@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Threat : MonoBehaviour {
 
-    public float FearRange; 
+    public float FearRange;
 
 	// Use this for initialization
 	void Start () {

@@ -876,7 +876,7 @@ MonoBehaviour:
   WanderRadius: 0
   WanderDistance: 0
   WanderJitter: 0
-  DebugRender: 0
+  DebugRender: 1
 --- !u!114 &1098549728
 MonoBehaviour:
   m_ObjectHideFlags: 0

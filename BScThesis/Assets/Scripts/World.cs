@@ -13,6 +13,7 @@ namespace SteeringBehaviorsNS
         {
             public Vector2 pos;
             public Vector2 vel;
+
         }
 
         private List<Boid> boids;
