@@ -16,8 +16,11 @@ namespace SteeringBehaviorsNS
 
         }
 
+        private readonly int structSize = 4 * sizeof(float);
+
         private List<Boid> boids;
         private ComputeBuffer boidDataBuffer;
+        private BoidData[] boidsData;
 
         public ComputeShader SteeringBehaviorsShader;
         
@@ -25,26 +28,35 @@ namespace SteeringBehaviorsNS
         void Start()
         {
             boids = FindObjectsOfType<Boid>().ToList();
-            boidDataBuffer = new ComputeBuffer(boids.Count, sizeof(float) * 4);
+            boidDataBuffer = new ComputeBuffer(boids.Count, structSize);
         }
 
         // Update is called once per frame
         void Update()
         {
-            BoidData[] boidsData = new BoidData[boids.Count];
+            // TODO: move to start for performance purposes
+            boidsData = new BoidData[boids.Count];
 
             for (int i=0; i<boids.Count; i++)
             {
-                BoidData bd = new BoidData();
-                bd.pos = boids[i].transform.position;
-                bd.vel = boids[i].Velocity;
+                BoidData bd = new BoidData
+                {
+                    pos = boids[i].transform.position,
+                    vel = boids[i].Velocity
+                };
 
                 boidsData[i] = bd;
             }
 
-            boidDataBuffer.SetData(boidsData);
+            DispatchAndUpdateData();
+            MoveBoids();
+        }
 
-            // compute shader here
+
+        private void DispatchAndUpdateData()
+        {
+            boidDataBuffer.SetData(boidsData); // TODO: don't do this for performance purposes
+
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
@@ -52,11 +64,19 @@ namespace SteeringBehaviorsNS
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 
             boidDataBuffer.GetData(boidsData);
+        }
 
-            for (int i=0; i<boids.Count; i++)
+        private void MoveBoids()
+        {
+            for (int i = 0; i < boids.Count; i++)
             {
                 boids[i].transform.position = boidsData[i].pos;
             }
+        }
+
+        private void OnDestroy()
+        {
+            boidDataBuffer.Release();
         }
     }
 }

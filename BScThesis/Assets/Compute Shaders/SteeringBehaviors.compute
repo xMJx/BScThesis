@@ -33,10 +33,10 @@ float2 Calculate(uint3 id)
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // find neighbours
-    // c
+    // calculate forces
+    // update velocity
 
     Move(id);
-
-
+    
     // TODO: insert actual code here!
 }
