@@ -5,38 +5,55 @@ float DeltaTime;
 float WanderRadius;
 float WanderDistance;
 float WanderJitter;
+float WanderWeight;
 
+static const float PI = 3.14159265f;
 
 struct BoidData
 {
     float2 pos;
     float2 vel;
+    float2 heading;
+
+    float2 wanderTarget;
 };
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
+
+float2 Wander(uint3 id)
+{
+    //float2 jitter = { noise(1) * WanderJitter, noise(1) * WanderJitter };
+    //BoidDataBuffer[id.x].wanderTarget += jitter;
+
+    BoidDataBuffer[id.x].wanderTarget = normalize(BoidDataBuffer[id.x].wanderTarget) * WanderRadius;
+    BoidDataBuffer[id.x].wanderTarget += normalize(BoidDataBuffer[id.x].wanderTarget) * WanderDistance;
+
+    return WanderWeight * BoidDataBuffer[id.x].wanderTarget;
+}
+
+float2 Calculate(uint3 id)
+{
+    float2 steeringForce = { 0, 0 };
+    steeringForce += Wander(id);
+
+    return steeringForce;
+}
+
+void UpdateVelocity(uint3 id)
+{
+    BoidDataBuffer[id.x].vel += Calculate(id) * DeltaTime;
+}
 
 void Move(uint3 id)
 {
     BoidDataBuffer[id.x].pos += BoidDataBuffer[id.x].vel * DeltaTime;
 }
 
-float2 Calculate(uint3 id)
-{
-    float2 SteeringForce = {0,0};
-
-
-
-    return SteeringForce;
-}
-
 [numthreads(8,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // find neighbours
-    // calculate forces
-    // update velocity
 
+    UpdateVelocity(id);
     Move(id);
-    
-    // TODO: insert actual code here!
 }

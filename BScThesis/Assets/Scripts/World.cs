@@ -13,17 +13,23 @@ namespace SteeringBehaviorsNS
         {
             public Vector2 pos;
             public Vector2 vel;
+            public Vector2 heading;
 
+            public Vector2 wanderTarget;
         }
 
-        private readonly int structSize = 4 * sizeof(float);
+        private readonly int structSize = 8 * sizeof(float);
 
         private List<Boid> boids;
         private ComputeBuffer boidDataBuffer;
         private BoidData[] boidsData;
 
         public ComputeShader SteeringBehaviorsShader;
-        
+
+        public float WanderRadius;
+        public float WanderDistance;
+        public float WanderJitter;
+
         // Use this for initialization
         void Start()
         {
@@ -35,23 +41,30 @@ namespace SteeringBehaviorsNS
         void Update()
         {
             // TODO: move to start for performance purposes
-            boidsData = new BoidData[boids.Count];
-
-            for (int i=0; i<boids.Count; i++)
-            {
-                BoidData bd = new BoidData
-                {
-                    pos = boids[i].transform.position,
-                    vel = boids[i].Velocity
-                };
-
-                boidsData[i] = bd;
-            }
+            InitializeData();
 
             DispatchAndUpdateData();
             MoveBoids();
         }
 
+        private void InitializeData()
+        {
+            boidsData = new BoidData[boids.Count];
+
+            for (int i = 0; i < boids.Count; i++)
+            {
+                BoidData bd = new BoidData
+                {
+                    pos = boids[i].transform.position,
+                    vel = boids[i].Velocity,
+                    heading = boids[i].Heading,
+
+                    wanderTarget = boids[i].SteeringBehaviors.WanderTarget
+                };
+
+                boidsData[i] = bd;
+            }
+        }
 
         private void DispatchAndUpdateData()
         {
@@ -60,6 +73,10 @@ namespace SteeringBehaviorsNS
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
+            SteeringBehaviorsShader.SetFloat("WanderRadius", WanderRadius);
+            SteeringBehaviorsShader.SetFloat("WanderJitter", WanderJitter);
+            SteeringBehaviorsShader.SetFloat("WanderDistance", WanderDistance);
+
 
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 

@@ -19,14 +19,14 @@ namespace SteeringBehaviorsNS
         public float MaxForce;
         public float MaxTurnRate;
 
-        private SteeringBehaviors steeringBehaviors;
+        public SteeringBehaviors SteeringBehaviors { get; set; }
 
         // Use this for initialization
         void Start()
         {
             Heading = new Vector2(0.0f, 1.0f);
 
-            steeringBehaviors = GetComponent<SteeringBehaviors>();
+            SteeringBehaviors = GetComponent<SteeringBehaviors>();
 
             Walls = new List<Wall>();
             foreach (GameObject o in GameObject.FindGameObjectsWithTag("SceneWall"))
@@ -43,7 +43,7 @@ namespace SteeringBehaviorsNS
         void Update()
         {
             // get F
-            Vector2 steeringForce = steeringBehaviors.Calculate();
+            Vector2 steeringForce = SteeringBehaviors.Calculate();
 
             // a = F/m
             Vector2 acceleration = steeringForce / Mass;
@@ -89,7 +89,7 @@ namespace SteeringBehaviorsNS
 
         bool RotateBoidToMatchHeading()
         {
-            transform.rotation = Quaternion.EulerRotation(0,0,-Mathf.Atan2(Heading.x, Heading.y));
+            transform.rotation = Quaternion.Euler(0, 0, Mathf.Rad2Deg * -Mathf.Atan2(Heading.x, Heading.y));
 
             return false;
         }

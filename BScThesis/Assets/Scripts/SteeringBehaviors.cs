@@ -52,9 +52,6 @@ namespace SteeringBehaviorsNS
             //create a vector to a target position on the wander circle
             WanderTarget = new Vector2(WanderRadius * Mathf.Cos(theta),
                                         WanderRadius * Mathf.Sin(theta));
-
-            // debug 
-            WanderTarget = Vector2.zero;
         }
 
         // Update is called once per frame
@@ -73,8 +70,8 @@ namespace SteeringBehaviorsNS
 
         private Vector2 CalculatePrioritized()
         {
-            React(boid.OtherBoids);
-            steeringForce += WanderWeight * Wander();
+            //React(boid.OtherBoids);
+            //steeringForce += WanderWeight * Wander();
 
             return steeringForce;
         }
@@ -113,7 +110,7 @@ namespace SteeringBehaviorsNS
         private Vector2 Wander()
         {
             WanderTarget += new Vector2((Random.value * 2 - 1) * WanderJitter, (Random.value * 2 - 1) * WanderJitter);
-            WanderTarget = WanderTarget.normalized * WanderRadius; 
+            WanderTarget = WanderTarget.normalized * WanderRadius;
             WanderTarget += boid.Heading.normalized * WanderDistance;
 
             // debug
@@ -206,7 +203,7 @@ namespace SteeringBehaviorsNS
                 return Vector2.zero;
             }
         }
-
+        
         private void CreateFeelers()
         {
             feelers = new List<Vector2>();
