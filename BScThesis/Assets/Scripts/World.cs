@@ -29,6 +29,7 @@ namespace SteeringBehaviorsNS
         public float WanderRadius;
         public float WanderDistance;
         public float WanderJitter;
+        public float WanderWeight;
 
         // Use this for initialization
         void Start()
@@ -76,6 +77,7 @@ namespace SteeringBehaviorsNS
             SteeringBehaviorsShader.SetFloat("WanderRadius", WanderRadius);
             SteeringBehaviorsShader.SetFloat("WanderJitter", WanderJitter);
             SteeringBehaviorsShader.SetFloat("WanderDistance", WanderDistance);
+            SteeringBehaviorsShader.SetFloat("WanderWeight", WanderWeight);
 
 
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
