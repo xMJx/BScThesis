@@ -6,6 +6,7 @@ float WanderRadius;
 float WanderDistance;
 float WanderJitter;
 float WanderWeight;
+float RandomFloat;
 
 static const float PI = 3.14159265f;
 
@@ -15,15 +16,15 @@ struct BoidData
     float2 vel;
     float2 heading;
 
-    float2 wanderTarget;
+    float2 wanderTarget; 
 };
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
 
 float2 Wander(uint3 id)
 {
-    //float2 jitter = { noise(1) * WanderJitter, noise(1) * WanderJitter };
-    //BoidDataBuffer[id.x].wanderTarget += jitter;
+    float2 jitter = { BoidDataBuffer[id.x].randomFloat * WanderJitter, BoidDataBuffer[id.x].randomFloat * WanderJitter };
+    BoidDataBuffer[id.x].wanderTarget += jitter;
 
     BoidDataBuffer[id.x].wanderTarget = normalize(BoidDataBuffer[id.x].wanderTarget) * WanderRadius;
     BoidDataBuffer[id.x].wanderTarget += normalize(BoidDataBuffer[id.x].wanderTarget) * WanderDistance;

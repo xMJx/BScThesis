@@ -16,9 +16,10 @@ namespace SteeringBehaviorsNS
             public Vector2 heading;
 
             public Vector2 wanderTarget;
+            public float randomFloat;
         }
 
-        private readonly int structSize = 8 * sizeof(float);
+        private readonly int structSize = 9 * sizeof(float);
 
         private List<Boid> boids;
         private ComputeBuffer boidDataBuffer;
@@ -36,14 +37,12 @@ namespace SteeringBehaviorsNS
         {
             boids = FindObjectsOfType<Boid>().ToList();
             boidDataBuffer = new ComputeBuffer(boids.Count, structSize);
+            InitializeData();
         }
 
         // Update is called once per frame
         void Update()
         {
-            // TODO: move to start for performance purposes
-            InitializeData();
-
             DispatchAndUpdateData();
             MoveBoids();
         }
@@ -60,25 +59,28 @@ namespace SteeringBehaviorsNS
                     vel = boids[i].Velocity,
                     heading = boids[i].Heading,
 
-                    wanderTarget = boids[i].SteeringBehaviors.WanderTarget
+                    wanderTarget = boids[i].SteeringBehaviors.WanderTarget,
+                    randomFloat = UnityEngine.Random.value
                 };
 
+                int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
+                SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
+                SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
+                SteeringBehaviorsShader.SetFloat("WanderRadius", WanderRadius);
+                SteeringBehaviorsShader.SetFloat("WanderJitter", WanderJitter);
+                SteeringBehaviorsShader.SetFloat("WanderDistance", WanderDistance);
+                SteeringBehaviorsShader.SetFloat("WanderWeight", WanderWeight);
+
                 boidsData[i] = bd;
+
+                boidDataBuffer.SetData(boidsData); // TODO: don't do this for performance purposes
             }
         }
 
         private void DispatchAndUpdateData()
         {
-            boidDataBuffer.SetData(boidsData); // TODO: don't do this for performance purposes
-
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
-            SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-            SteeringBehaviorsShader.SetFloat("WanderRadius", WanderRadius);
-            SteeringBehaviorsShader.SetFloat("WanderJitter", WanderJitter);
-            SteeringBehaviorsShader.SetFloat("WanderDistance", WanderDistance);
-            SteeringBehaviorsShader.SetFloat("WanderWeight", WanderWeight);
-
 
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 

@@ -1089,6 +1089,7 @@ MonoBehaviour:
   WanderRadius: 3
   WanderDistance: 4
   WanderJitter: 6
+  WanderWeight: 1
 --- !u!124 &1652885439
 Behaviour:
   m_ObjectHideFlags: 0
