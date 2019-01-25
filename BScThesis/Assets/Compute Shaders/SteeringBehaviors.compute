@@ -6,9 +6,8 @@ float WanderRadius;
 float WanderDistance;
 float WanderJitter;
 float WanderWeight;
-float RandomFloat;
 
-static const float PI = 3.14159265f;
+//static const float PI = 3.14159265f;
 
 struct BoidData
 {
@@ -23,7 +22,10 @@ RWStructuredBuffer<BoidData> BoidDataBuffer;
 
 float2 Wander(uint3 id)
 {
-    float2 jitter = { BoidDataBuffer[id.x].randomFloat * WanderJitter, BoidDataBuffer[id.x].randomFloat * WanderJitter };
+    float rand = sin(id.x * DeltaTime * 1000  * BoidDataBuffer[id.x].pos.x);
+
+    float2 jitter = { rand * WanderJitter, rand * WanderJitter };
+
     BoidDataBuffer[id.x].wanderTarget += jitter;
 
     BoidDataBuffer[id.x].wanderTarget = normalize(BoidDataBuffer[id.x].wanderTarget) * WanderRadius;
@@ -54,7 +56,7 @@ void Move(uint3 id)
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // find neighbours
-
-    UpdateVelocity(id);
+    BoidDataBuffer[id.x].wanderTarget += float2(0.5f, 1.0f);
+    //UpdateVelocity(id);
     Move(id);
 }

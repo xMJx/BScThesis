@@ -1,5 +1,4 @@
-﻿
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,10 +10,14 @@ namespace SteeringBehaviorsNS
     {
         public float FeelerLength;
         public float WallAvoidanceWeight;
+
         public float WanderWeight;
+
         public float FleeWeight;
+
         public float SeekWeight;
-        public float DecelerationRate;
+        
+        //public float DecelerationRate;
 
         public Vector2 WanderTarget;
         public float WanderRadius;
@@ -181,28 +184,28 @@ namespace SteeringBehaviorsNS
         }
 
         // WIP
-        private Vector2 Arrive(Vector2 target)
-        {
-            float dist = (target - (Vector2)transform.position).magnitude;
+        //private Vector2 Arrive(Vector2 target)
+        //{
+        //    float dist = (target - (Vector2)transform.position).magnitude;
 
-            if (dist > 0.001)
-            {
-                // ? = s / a = t^2
-                // speed to t^2?
-                float speed = dist / DecelerationRate;
-                speed = Mathf.Min(speed, boid.MaxSpeed);
-                Vector2 desiredVelocity;
+        //    if (dist > 0.001)
+        //    {
+        //        // ? = s / a = t^2
+        //        // speed to t^2?
+        //        float speed = dist / DecelerationRate;
+        //        speed = Mathf.Min(speed, boid.MaxSpeed);
+        //        Vector2 desiredVelocity;
 
-                // s <= a * t^2 / 2
-                desiredVelocity = (target - (Vector2)transform.position) / dist * speed;
+        //        // s <= a * t^2 / 2
+        //        desiredVelocity = (target - (Vector2)transform.position) / dist * speed;
 
-                return desiredVelocity - boid.Velocity;
-            }
-            else
-            {
-                return Vector2.zero;
-            }
-        }
+        //        return desiredVelocity - boid.Velocity;
+        //    }
+        //    else
+        //    {
+        //        return Vector2.zero;
+        //    }
+        //}
         
         private void CreateFeelers()
         {
