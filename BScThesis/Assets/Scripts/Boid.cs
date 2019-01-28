@@ -12,7 +12,6 @@ namespace SteeringBehaviorsNS
 
         public Vector2 Velocity;
         public Vector2 Heading;
-        public Vector2 Side;
 
         public float Mass;
         public float MaxSpeed;

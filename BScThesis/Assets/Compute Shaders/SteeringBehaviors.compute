@@ -1,13 +1,18 @@
 ﻿#pragma kernel CSMain
 
 float DeltaTime;
+float RandomValueX;
+float RandomValueY;
+float2 ThreatPosition;
 
+float MaxBoidSpeed;
 float WanderRadius;
 float WanderDistance;
 float WanderJitter;
-float WanderWeight;
+float ThreatRange;
 
-//static const float PI = 3.14159265f;
+float WanderWeight;
+float FleeWeight;
 
 struct BoidData
 {
@@ -15,29 +20,51 @@ struct BoidData
     float2 vel;
     float2 heading;
 
-    float2 wanderTarget; 
+    float2 wanderTarget;
+    float randomSeed;
 };
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
 
+float2 Seek(uint3 id, float2 targetPosition)
+{
+    float2 desiredVelocity = normalize(BoidDataBuffer[id.x].pos - targetPosition) * MaxBoidSpeed;
+    return desiredVelocity - BoidDataBuffer[id.x].vel;
+}
+
+float2 Flee(uint3 id, float2 threatPosition)
+{
+    float2 toThreat = BoidDataBuffer[id.x].pos - threatPosition;
+    if (length(toThreat) < ThreatRange)
+    {
+        float2 desiredVelocity = normalize(toThreat) * MaxBoidSpeed;
+        return desiredVelocity - BoidDataBuffer[id.x].vel;
+    }
+    else
+        return float2(0, 0);
+}
+
 float2 Wander(uint3 id)
 {
-    float rand = sin(id.x * DeltaTime * 1000  * BoidDataBuffer[id.x].pos.x);
+    float randX = sin(RandomValueX * BoidDataBuffer[id.x].randomSeed);
+    float randY = sin(RandomValueY * BoidDataBuffer[id.x].randomSeed);
 
-    float2 jitter = { rand * WanderJitter, rand * WanderJitter };
+    // !!!!!!!!
+    float2 jitter = { randX * WanderJitter, randY * WanderJitter };
 
     BoidDataBuffer[id.x].wanderTarget += jitter;
 
     BoidDataBuffer[id.x].wanderTarget = normalize(BoidDataBuffer[id.x].wanderTarget) * WanderRadius;
     BoidDataBuffer[id.x].wanderTarget += normalize(BoidDataBuffer[id.x].wanderTarget) * WanderDistance;
 
-    return WanderWeight * BoidDataBuffer[id.x].wanderTarget;
+    return BoidDataBuffer[id.x].wanderTarget;
 }
 
 float2 Calculate(uint3 id)
 {
     float2 steeringForce = { 0, 0 };
-    steeringForce += Wander(id);
+    steeringForce += WanderWeight * Wander(id);
+    steeringForce += FleeWeight * Flee(id, ThreatPosition);
 
     return steeringForce;
 }
@@ -52,11 +79,10 @@ void Move(uint3 id)
     BoidDataBuffer[id.x].pos += BoidDataBuffer[id.x].vel * DeltaTime;
 }
 
-[numthreads(8,1,1)]
+[numthreads(1024,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
     // find neighbours
-    BoidDataBuffer[id.x].wanderTarget += float2(0.5f, 1.0f);
-    //UpdateVelocity(id);
+    UpdateVelocity(id);
     Move(id);
 }

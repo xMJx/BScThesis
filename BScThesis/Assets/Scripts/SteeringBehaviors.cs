@@ -46,7 +46,7 @@ namespace SteeringBehaviorsNS
         {
             WanderRadius = 3.0f;
             WanderDistance = 4.0f;
-            WanderJitter = 6;
+            WanderJitter = 6.0f;
             boid = GetComponent<Boid>();
 
             //stuff for the wander behavior
