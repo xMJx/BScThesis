@@ -14,6 +14,8 @@ float ThreatRange;
 float WanderWeight;
 float FleeWeight;
 
+const static float PI = 3.14159265359;
+
 struct BoidData
 {
     float2 pos;
@@ -46,8 +48,8 @@ float2 Flee(uint3 id, float2 threatPosition)
 
 float2 Wander(uint3 id)
 {
-    float randX = sin(RandomValueX * BoidDataBuffer[id.x].randomSeed);
-    float randY = sin(RandomValueY * BoidDataBuffer[id.x].randomSeed);
+    float randX = sin(RandomValueX * BoidDataBuffer[id.x].randomSeed * PI);
+    float randY = sin(RandomValueY * BoidDataBuffer[id.x].randomSeed * PI);
 
     // !!!!!!!!
     float2 jitter = { randX * WanderJitter, randY * WanderJitter };
@@ -72,6 +74,7 @@ float2 Calculate(uint3 id)
 void UpdateVelocity(uint3 id)
 {
     BoidDataBuffer[id.x].vel += Calculate(id) * DeltaTime;
+    BoidDataBuffer[id.x].vel = clamp(BoidDataBuffer[id.x].vel, float2(-MaxBoidSpeed, -MaxBoidSpeed), float2(MaxBoidSpeed, MaxBoidSpeed));
 }
 
 void Move(uint3 id)

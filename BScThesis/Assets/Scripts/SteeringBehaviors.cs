@@ -74,7 +74,10 @@ namespace SteeringBehaviorsNS
         private Vector2 CalculatePrioritized()
         {
             //React(boid.OtherBoids);
-            //steeringForce += WanderWeight * Wander();
+            if (GetComponent<Threat>())
+            {
+                steeringForce += WanderWeight * Wander();
+            }
 
             return steeringForce;
         }
