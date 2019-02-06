@@ -7,8 +7,7 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
-        public List<GameObject> OtherBoids { get; set; }
-        public List<Wall> Walls { get; set; }
+        public List<GameObject> Neighbours { get; set; }
 
         public Vector2 Velocity;
         public Vector2 Heading;
@@ -18,47 +17,30 @@ namespace SteeringBehaviorsNS
         public float MaxForce;
         public float MaxTurnRate;
 
-        public SteeringBehaviors SteeringBehaviors { get; set; }
+        public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
 
         // Use this for initialization
         void Start()
         {
             Heading = new Vector2(0.0f, 1.0f);
 
-            SteeringBehaviors = GetComponent<SteeringBehaviors>();
+            SteeringBehaviorsCPU = GetComponent<SteeringBehaviorsCPU>();
 
-            Walls = new List<Wall>();
-            foreach (GameObject o in GameObject.FindGameObjectsWithTag("SceneWall"))
-            {
-                Walls.Add(o.GetComponent<Wall>());
-            }
-
-            OtherBoids = new List<GameObject>();
-            OtherBoids.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
-            OtherBoids.Remove(this.gameObject);
+            Neighbours = new List<GameObject>();
+            Neighbours.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
+            Neighbours.Remove(this.gameObject);
         }
 
         // Update is called once per frame
         void Update()
         {
-            // get F
-            Vector2 steeringForce = SteeringBehaviors.Calculate();
-
-            // a = F/m
-            Vector2 acceleration = steeringForce / Mass;
-            
-            // v = v + at
-            Velocity += acceleration * Time.deltaTime;
-
-            // v <= vmax
-            Velocity = Vector2.ClampMagnitude(Velocity, MaxSpeed);
-
-            // s = s + vt
-            if (GetComponent<Threat>())
+            if (GetComponent<Threat>() || !FindObjectOfType<SteeringBehaviorsGPU>())
             {
+                Velocity = SteeringBehaviorsCPU.UpdateVelocity();
                 Move();
             }
-            // wizualizacja
+            
+            // Rotate the boid
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
         }
@@ -71,7 +53,7 @@ namespace SteeringBehaviorsNS
 
         bool RotateHeadingToFacePosition(Vector2 target)
         {
-            // Normalizowany wektor od boidu do celu
+            // Normalized vector from boid to its target position
             Vector2 toTarget = (target - (Vector2)transform.position).normalized;
 
             float angle = Vector2.SignedAngle(Heading, toTarget);

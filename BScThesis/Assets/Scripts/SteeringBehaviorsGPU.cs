@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SteeringBehaviorsNS
 {
 
-    public class World : MonoBehaviour
+    public class SteeringBehaviorsGPU : MonoBehaviour
     {
         struct BoidData
         {
@@ -69,7 +69,7 @@ namespace SteeringBehaviorsNS
                     vel = boids[i].Velocity,
                     heading = boids[i].Heading,
 
-                    wanderTarget = boids[i].SteeringBehaviors.WanderTarget,
+                    wanderTarget = boids[i].transform.position,
                     randomSeed = 2.0f * UnityEngine.Random.value - 1
                 };
                 boidsData[i] = bd;
@@ -101,20 +101,11 @@ namespace SteeringBehaviorsNS
             RandomValue = 2.0f * UnityEngine.Random.value - 1;
             SteeringBehaviorsShader.SetFloat("RandomValueY", RandomValue);
 
-
             SteeringBehaviorsShader.SetVector("ThreatPosition", (Vector2)threat.transform.position);
 
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 
             boidDataBuffer.GetData(boidsData);
-
-            // debug
-            for (int i=0; i<boidsData.Length; i++)
-            {
-                //boids[i].SteeringBehaviors.WanderTarget = boidsData[i].wanderTarget;
-                //Debug.Log((boidsData[i].pos - (Vector2)threat.transform.position).normalized * MaxBoidSpeed);
-                //Debug.Log((boidsData[i].pos - (Vector2)threat.transform.position).normalized * MaxBoidSpeed);
-            }
         }
 
         private void MoveBoids()
@@ -128,7 +119,7 @@ namespace SteeringBehaviorsNS
 
         private void OnDestroy()
         {
-            boidDataBuffer.Release();
+            boidDataBuffer.Dispose();
         }
     }
 }
