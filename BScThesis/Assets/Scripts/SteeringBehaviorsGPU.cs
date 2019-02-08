@@ -13,14 +13,9 @@ namespace SteeringBehaviorsNS
         {
             public Vector2 pos;
             public Vector2 vel;
-            public Vector2 heading;
-
-            public Vector2 wanderTarget;
-
-            public float randomSeed;
         }
 
-        private readonly int structSize = 9 * sizeof(float);
+        private readonly int structSize = 4 * sizeof(float);
         private ComputeBuffer boidDataBuffer;
         private List<Boid> boids;
         private BoidData[] boidsData;
@@ -67,10 +62,6 @@ namespace SteeringBehaviorsNS
                 {
                     pos = boids[i].transform.position,
                     vel = boids[i].Velocity,
-                    heading = boids[i].Heading,
-
-                    wanderTarget = boids[i].transform.position,
-                    randomSeed = 2.0f * UnityEngine.Random.value - 1
                 };
                 boidsData[i] = bd;
             }
@@ -78,10 +69,7 @@ namespace SteeringBehaviorsNS
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-
-            SteeringBehaviorsShader.SetFloat("WanderRadius", WanderRadius);
-            SteeringBehaviorsShader.SetFloat("WanderJitter", WanderJitter);
-            SteeringBehaviorsShader.SetFloat("WanderDistance", WanderDistance);
+            
             SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
             SteeringBehaviorsShader.SetFloat("ThreatRange", ThreatRange);
 
@@ -95,11 +83,6 @@ namespace SteeringBehaviorsNS
         {
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-
-            RandomValue = 2.0f * UnityEngine.Random.value - 1;
-            SteeringBehaviorsShader.SetFloat("RandomValueX", RandomValue);
-            RandomValue = 2.0f * UnityEngine.Random.value - 1;
-            SteeringBehaviorsShader.SetFloat("RandomValueY", RandomValue);
 
             SteeringBehaviorsShader.SetVector("ThreatPosition", (Vector2)threat.transform.position);
 

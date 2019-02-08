@@ -7,8 +7,6 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
-        public List<GameObject> Neighbours { get; set; }
-
         public Vector2 Velocity;
         public Vector2 Heading;
 
@@ -17,24 +15,25 @@ namespace SteeringBehaviorsNS
         public float MaxForce;
         public float MaxTurnRate;
 
+        private int frameCount;
+
         public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
+        public SteeringBehaviorsGPU SteeringBehaviorsGPU { get; set; }
 
         // Use this for initialization
         void Start()
         {
             Heading = new Vector2(0.0f, 1.0f);
-
             SteeringBehaviorsCPU = GetComponent<SteeringBehaviorsCPU>();
-
-            Neighbours = new List<GameObject>();
-            Neighbours.AddRange(GameObject.FindGameObjectsWithTag("SceneBoid"));
-            Neighbours.Remove(this.gameObject);
+            SteeringBehaviorsGPU = FindObjectOfType<SteeringBehaviorsGPU>();
+            
+            frameCount = 0;
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (GetComponent<Threat>() || !FindObjectOfType<SteeringBehaviorsGPU>())
+            if (GetComponent<Threat>() || SteeringBehaviorsGPU == null)
             {
                 Velocity = SteeringBehaviorsCPU.UpdateVelocity();
                 Move();
@@ -43,6 +42,13 @@ namespace SteeringBehaviorsNS
             // Rotate the boid
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
+
+            if (frameCount == 100)
+            {
+                Debug.Log(Time.realtimeSinceStartup);
+                frameCount++;
+            }
+            else frameCount++;
         }
 
         void Move()

@@ -6,12 +6,8 @@ float RandomValueY;
 float2 ThreatPosition;
 
 float MaxBoidSpeed;
-float WanderRadius;
-float WanderDistance;
-float WanderJitter;
 float ThreatRange;
 
-float WanderWeight;
 float FleeWeight;
 
 const static float PI = 3.14159265359;
@@ -20,19 +16,9 @@ struct BoidData
 {
     float2 pos;
     float2 vel;
-    float2 heading;
-
-    float2 wanderTarget;
-    float randomSeed;
 };
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
-
-float2 Seek(uint3 id, float2 targetPosition)
-{
-    float2 desiredVelocity = normalize(BoidDataBuffer[id.x].pos - targetPosition) * MaxBoidSpeed;
-    return desiredVelocity - BoidDataBuffer[id.x].vel;
-}
 
 float2 Flee(uint3 id, float2 threatPosition)
 {
@@ -46,26 +32,9 @@ float2 Flee(uint3 id, float2 threatPosition)
         return float2(0, 0);
 }
 
-float2 Wander(uint3 id)
-{
-    float randX = sin(RandomValueX * BoidDataBuffer[id.x].randomSeed * PI);
-    float randY = sin(RandomValueY * BoidDataBuffer[id.x].randomSeed * PI);
-
-    // !!!!!!!!
-    float2 jitter = { randX * WanderJitter, randY * WanderJitter };
-
-    BoidDataBuffer[id.x].wanderTarget += jitter;
-
-    BoidDataBuffer[id.x].wanderTarget = normalize(BoidDataBuffer[id.x].wanderTarget) * WanderRadius;
-    BoidDataBuffer[id.x].wanderTarget += normalize(BoidDataBuffer[id.x].wanderTarget) * WanderDistance;
-
-    return BoidDataBuffer[id.x].wanderTarget;
-}
-
 float2 Calculate(uint3 id)
 {
     float2 steeringForce = { 0, 0 };
-    steeringForce += WanderWeight * Wander(id);
     steeringForce += FleeWeight * Flee(id, ThreatPosition);
 
     return steeringForce;

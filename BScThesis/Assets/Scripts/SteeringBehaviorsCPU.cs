@@ -17,10 +17,12 @@ namespace SteeringBehaviorsNS
         private float wanderDistance;
         private float wanderJitter;
 
+
         private Vector2 steeringForce;
         private Vector2 acceleration;
         private Vector2 velocity;
         private Boid boid;
+        private Threat threat;
         
         // Use this for initialization
         void Start()
@@ -29,6 +31,7 @@ namespace SteeringBehaviorsNS
             wanderDistance = 4.0f;
             wanderJitter = 6.0f;
             boid = GetComponent<Boid>();
+            threat = FindObjectOfType<Threat>();
             velocity = Vector2.zero;
 
             //stuff for the wander behavior
@@ -64,35 +67,15 @@ namespace SteeringBehaviorsNS
         private Vector2 CalculateForce()
         {
             steeringForce = Vector2.zero;
-
-            React(boid.Neighbours);
-            steeringForce += WanderWeight * Wander();
+            
+            if ((boid.transform.position - threat.transform.position).magnitude < threat.GetComponent<Threat>().FearRange)
+            {
+                steeringForce += FleeWeight * Flee(threat.transform.position);
+            }
+            if (GetComponent<Threat>())
+                steeringForce += WanderWeight * Wander();
 
             return steeringForce;
-        }
-
-        private void React(List<GameObject> others)
-        {
-            foreach (var other in others)
-            {
-                // Flee from threat
-                if (other.GetComponent<Threat>() && (this.transform.position - other.transform.position).magnitude < other.GetComponent<Threat>().FearRange)
-                {
-                    steeringForce += FleeWeight * this.Flee(other.transform.position);
-                }
-
-                // Seek for food
-                if (other.GetComponent<Food>() && this.GetComponent<Threat>())
-                {
-                    steeringForce += SeekWeight * this.Seek(other.transform.position);
-                }
-            }
-        }
-
-        private Vector2 Seek(Vector2 target)
-        {
-            Vector2 desiredVelocity = (target - (Vector2)transform.position).normalized * boid.MaxSpeed;
-            return desiredVelocity - boid.Velocity;
         }
 
         private Vector2 Flee(Vector2 threat)
