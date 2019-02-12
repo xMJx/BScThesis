@@ -22,17 +22,15 @@ namespace SteeringBehaviorsNS
         private Threat threat;
 
         public ComputeShader SteeringBehaviorsShader;
-
-        public float WanderRadius;
-        public float WanderDistance;
-        public float WanderJitter;
+        
         public float MaxBoidSpeed;
         public float ThreatRange;
-
-        public float WanderWeight;
+        public float NeighbourhoodRange;
+        
         public float FleeWeight;
-
-        public float RandomValue;
+        public float CohesionWeight;
+        public float AlignmentWeight;
+        public float SeparationWeight;
 
 
         // Use this for initialization
@@ -61,31 +59,33 @@ namespace SteeringBehaviorsNS
                 BoidData bd = new BoidData
                 {
                     pos = boids[i].transform.position,
-                    vel = boids[i].Velocity,
+                    vel = boids[i].Velocity
                 };
                 boidsData[i] = bd;
             }
 
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
-            SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-            
-            SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
-            SteeringBehaviorsShader.SetFloat("ThreatRange", ThreatRange);
 
-            SteeringBehaviorsShader.SetFloat("WanderWeight", WanderWeight);
+            SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
+            SteeringBehaviorsShader.SetInt("BoidCount", boidDataBuffer.count);
+            SteeringBehaviorsShader.SetFloat("ThreatRange", ThreatRange);
+            SteeringBehaviorsShader.SetFloat("NeighbourhoodRange", NeighbourhoodRange);
+
             SteeringBehaviorsShader.SetFloat("FleeWeight", FleeWeight);
-            
+            SteeringBehaviorsShader.SetFloat("CohesionWeight", CohesionWeight);
+            SteeringBehaviorsShader.SetFloat("AlignmentWeight", AlignmentWeight);
+            SteeringBehaviorsShader.SetFloat("SeparationWeight", SeparationWeight);
+
             boidDataBuffer.SetData(boidsData);
         }
 
         private void DispatchAndUpdateData()
         {
-            int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-
             SteeringBehaviorsShader.SetVector("ThreatPosition", (Vector2)threat.transform.position);
 
+            int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 
             boidDataBuffer.GetData(boidsData);

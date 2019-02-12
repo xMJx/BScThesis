@@ -1,16 +1,21 @@
 ﻿#pragma kernel CSMain
 
 float DeltaTime;
-float RandomValueX;
-float RandomValueY;
 float2 ThreatPosition;
 
+float2 boidPos;
+
 float MaxBoidSpeed;
+int BoidCount;
 float ThreatRange;
+float NeighborhoodRange;
+int NeighborCount;
 
 float FleeWeight;
+float SeparationWeight;
+float AlignmentWeight;
+float CohesionWeight;
 
-const static float PI = 3.14159265359;
 
 struct BoidData
 {
@@ -20,29 +25,111 @@ struct BoidData
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
 
+float2 Seek(uint3 id, float2 targetPosition)
+{
+    float2 desiredVelocity = normalize(boidPos - targetPosition) * MaxBoidSpeed;
+    return desiredVelocity - BoidDataBuffer[id.x].vel;
+}
+
 float2 Flee(uint3 id, float2 threatPosition)
 {
-    float2 toThreat = BoidDataBuffer[id.x].pos - threatPosition;
+    float2 toThreat = boidPos - threatPosition; // debug!!
     if (length(toThreat) < ThreatRange)
     {
         float2 desiredVelocity = normalize(toThreat) * MaxBoidSpeed;
         return desiredVelocity - BoidDataBuffer[id.x].vel;
     }
     else
+    {
         return float2(0, 0);
+    }
 }
 
-float2 Calculate(uint3 id)
+void FindNeighbors(uint3 id, int NeighborTags[100])
+{
+    //for (int i = 0; i < 100; i++)
+    //{
+    //    NeighborTags[i] = 0;
+    //}
+
+    NeighborCount = 0;
+
+    for (int i = 0; i < BoidCount; i++)
+    {
+        if (i != id.x)
+        {
+            if (length(BoidDataBuffer[i].pos - BoidDataBuffer[id.x].pos) <= NeighborhoodRange)
+            {
+                NeighborTags[NeighborCount] = i;
+                NeighborCount++;
+            }
+        }
+    }
+}
+
+float2 Separation(uint3 id, int NeighborTags[100])
+{
+    float2 separationForce = { 0, 0 };
+
+    for (int i = 0; i < NeighborCount; i++)
+    {
+        float2 toAgent = BoidDataBuffer[id.x].pos - BoidDataBuffer[NeighborTags[i]].pos;
+        separationForce += normalize(toAgent) / length(toAgent);
+    }
+    return separationForce;
+}
+
+float2 Alignment(uint3 id, int NeighborTags[100])
+{
+    float2 averageHeading = { 0, 0 };
+    
+    for (int i = 0; i < NeighborCount; i++)
+    {
+        averageHeading += normalize(BoidDataBuffer[NeighborTags[i]].vel);
+    }
+
+    if (NeighborCount > 0)
+    {
+        averageHeading /= NeighborCount;
+        averageHeading -= normalize(BoidDataBuffer[id.x].vel);
+    }
+    return averageHeading;
+}
+
+float2 Cohesion(uint3 id, int NeighborTags[100])
+{
+    float2 centerOfMass = { 0, 0 };
+    float2 cohesionForce = { 0, 0 };
+            
+    for (int i = 0; i < NeighborCount; i++)
+    {
+        centerOfMass += BoidDataBuffer[NeighborTags[i]].pos;
+    }
+
+    if (NeighborCount > 0)
+    {
+        centerOfMass /= NeighborCount;
+        cohesionForce = Seek(id, centerOfMass);
+        return normalize(cohesionForce);
+    }
+    return cohesionForce;
+}
+
+float2 Calculate(uint3 id, int NeighborTags[100])
 {
     float2 steeringForce = { 0, 0 };
+
     steeringForce += FleeWeight * Flee(id, ThreatPosition);
+    steeringForce += SeparationWeight * Separation(id, NeighborTags);
+    steeringForce += AlignmentWeight * Alignment(id, NeighborTags);
+    steeringForce += CohesionWeight * Cohesion(id, NeighborTags);
 
     return steeringForce;
 }
 
-void UpdateVelocity(uint3 id)
+void UpdateVelocity(uint3 id, int NeighborTags[100])
 {
-    BoidDataBuffer[id.x].vel += Calculate(id) * DeltaTime;
+    BoidDataBuffer[id.x].vel += Calculate(id, NeighborTags) * DeltaTime;
     BoidDataBuffer[id.x].vel = clamp(BoidDataBuffer[id.x].vel, float2(-MaxBoidSpeed, -MaxBoidSpeed), float2(MaxBoidSpeed, MaxBoidSpeed));
 }
 
@@ -54,7 +141,9 @@ void Move(uint3 id)
 [numthreads(1024,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    // find neighbours
-    UpdateVelocity(id);
+    int NeighborTags[100] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    boidPos = BoidDataBuffer[id.x].pos;
+    FindNeighbors(id, NeighborTags);
+    UpdateVelocity(id, NeighborTags);
     Move(id);
 }

@@ -16,6 +16,7 @@ namespace SteeringBehaviorsNS
         public float MaxTurnRate;
 
         private int frameCount;
+        private float startTime;
 
         public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
         public SteeringBehaviorsGPU SteeringBehaviorsGPU { get; set; }
@@ -33,6 +34,9 @@ namespace SteeringBehaviorsNS
         // Update is called once per frame
         void Update()
         {
+            if (frameCount == 0)
+                startTime = Time.realtimeSinceStartup;
+            
             if (GetComponent<Threat>() || SteeringBehaviorsGPU == null)
             {
                 Velocity = SteeringBehaviorsCPU.UpdateVelocity();
@@ -43,9 +47,9 @@ namespace SteeringBehaviorsNS
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
 
-            if (frameCount == 100)
+            if (frameCount == 1000)
             {
-                Debug.Log(Time.realtimeSinceStartup);
+                Debug.Log(startTime + " " + Time.realtimeSinceStartup);
                 frameCount++;
             }
             else frameCount++;
