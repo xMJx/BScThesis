@@ -4,18 +4,20 @@ float DeltaTime;
 float2 ThreatPosition;
 
 float2 boidPos;
+float2 boidVel;
 
-float MaxBoidSpeed;
 int BoidCount;
+int NeighborCount;
+float MaxBoidSpeed;
 float ThreatRange;
 float NeighborhoodRange;
-int NeighborCount;
 
 float FleeWeight;
 float SeparationWeight;
 float AlignmentWeight;
 float CohesionWeight;
 
+int NeighborTags[360];
 
 struct BoidData
 {
@@ -25,19 +27,19 @@ struct BoidData
 
 RWStructuredBuffer<BoidData> BoidDataBuffer;
 
-float2 Seek(uint3 id, float2 targetPosition)
+float2 Seek(float2 targetPosition)
 {
     float2 desiredVelocity = normalize(boidPos - targetPosition) * MaxBoidSpeed;
-    return desiredVelocity - BoidDataBuffer[id.x].vel;
+    return desiredVelocity - boidVel;
 }
 
-float2 Flee(uint3 id, float2 threatPosition)
+float2 Flee(float2 threatPosition)
 {
-    float2 toThreat = boidPos - threatPosition; // debug!!
+    float2 toThreat = boidPos - threatPosition;
     if (length(toThreat) < ThreatRange)
     {
         float2 desiredVelocity = normalize(toThreat) * MaxBoidSpeed;
-        return desiredVelocity - BoidDataBuffer[id.x].vel;
+        return desiredVelocity - boidVel;
     }
     else
     {
@@ -45,7 +47,7 @@ float2 Flee(uint3 id, float2 threatPosition)
     }
 }
 
-void FindNeighbors(uint3 id, int NeighborTags[100])
+void FindNeighbors(uint3 id)
 {
     //for (int i = 0; i < 100; i++)
     //{
@@ -53,33 +55,33 @@ void FindNeighbors(uint3 id, int NeighborTags[100])
     //}
 
     NeighborCount = 0;
-
+    
     for (int i = 0; i < BoidCount; i++)
     {
         if (i != id.x)
         {
-            if (length(BoidDataBuffer[i].pos - BoidDataBuffer[id.x].pos) <= NeighborhoodRange)
+            if (length(BoidDataBuffer[i].pos - boidPos) <= NeighborhoodRange)
             {
                 NeighborTags[NeighborCount] = i;
-                NeighborCount++;
-            }
+                NeighborCount++;    // incrementation of NeighborCount within a double block may confuse the compiler (seems like it does)
+            }                  
         }
     }
 }
 
-float2 Separation(uint3 id, int NeighborTags[100])
+float2 Separation()
 {
     float2 separationForce = { 0, 0 };
 
     for (int i = 0; i < NeighborCount; i++)
     {
-        float2 toAgent = BoidDataBuffer[id.x].pos - BoidDataBuffer[NeighborTags[i]].pos;
+        float2 toAgent = boidPos - BoidDataBuffer[NeighborTags[i]].pos;
         separationForce += normalize(toAgent) / length(toAgent);
     }
     return separationForce;
 }
 
-float2 Alignment(uint3 id, int NeighborTags[100])
+float2 Alignment()
 {
     float2 averageHeading = { 0, 0 };
     
@@ -91,12 +93,12 @@ float2 Alignment(uint3 id, int NeighborTags[100])
     if (NeighborCount > 0)
     {
         averageHeading /= NeighborCount;
-        averageHeading -= normalize(BoidDataBuffer[id.x].vel);
+        averageHeading -= normalize(boidVel);
     }
     return averageHeading;
 }
 
-float2 Cohesion(uint3 id, int NeighborTags[100])
+float2 Cohesion()
 {
     float2 centerOfMass = { 0, 0 };
     float2 cohesionForce = { 0, 0 };
@@ -109,41 +111,43 @@ float2 Cohesion(uint3 id, int NeighborTags[100])
     if (NeighborCount > 0)
     {
         centerOfMass /= NeighborCount;
-        cohesionForce = Seek(id, centerOfMass);
+        cohesionForce = Seek(centerOfMass);
         return normalize(cohesionForce);
     }
     return cohesionForce;
 }
 
-float2 Calculate(uint3 id, int NeighborTags[100])
+float2 Calculate()
 {
     float2 steeringForce = { 0, 0 };
 
-    steeringForce += FleeWeight * Flee(id, ThreatPosition);
-    steeringForce += SeparationWeight * Separation(id, NeighborTags);
-    steeringForce += AlignmentWeight * Alignment(id, NeighborTags);
-    steeringForce += CohesionWeight * Cohesion(id, NeighborTags);
+    //steeringForce += FleeWeight * Flee(ThreatPosition);
+    //steeringForce += SeparationWeight * Separation();
+    //steeringForce += AlignmentWeight * Alignment();
+    steeringForce += CohesionWeight * Cohesion();
 
     return steeringForce;
 }
 
-void UpdateVelocity(uint3 id, int NeighborTags[100])
+void UpdateVelocity(uint3 id)
 {
-    BoidDataBuffer[id.x].vel += Calculate(id, NeighborTags) * DeltaTime;
-    BoidDataBuffer[id.x].vel = clamp(BoidDataBuffer[id.x].vel, float2(-MaxBoidSpeed, -MaxBoidSpeed), float2(MaxBoidSpeed, MaxBoidSpeed));
+    BoidDataBuffer[id.x].vel += Calculate() * DeltaTime;
+    //BoidDataBuffer[id.x].vel = clamp(BoidDataBuffer[id.x].vel, float2(-MaxBoidSpeed, -MaxBoidSpeed), float2(MaxBoidSpeed, MaxBoidSpeed));
 }
 
 void Move(uint3 id)
 {
     BoidDataBuffer[id.x].pos += BoidDataBuffer[id.x].vel * DeltaTime;
+    //BoidDataBuffer[id.x].pos = BoidDataBuffer[(id.x + 1) % 8].pos;
 }
 
 [numthreads(1024,1,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    int NeighborTags[100] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     boidPos = BoidDataBuffer[id.x].pos;
-    FindNeighbors(id, NeighborTags);
-    UpdateVelocity(id, NeighborTags);
+    boidVel = BoidDataBuffer[id.x].vel;
+    FindNeighbors(id);
+    UpdateVelocity(id);
     Move(id);
+
 }

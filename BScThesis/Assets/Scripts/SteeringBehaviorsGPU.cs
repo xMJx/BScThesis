@@ -25,7 +25,7 @@ namespace SteeringBehaviorsNS
         
         public float MaxBoidSpeed;
         public float ThreatRange;
-        public float NeighbourhoodRange;
+        public float NeighborhoodRange;
         
         public float FleeWeight;
         public float CohesionWeight;
@@ -64,20 +64,22 @@ namespace SteeringBehaviorsNS
                 boidsData[i] = bd;
             }
 
+            boidDataBuffer.SetData(boidsData);
+
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
 
             SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
             SteeringBehaviorsShader.SetInt("BoidCount", boidDataBuffer.count);
             SteeringBehaviorsShader.SetFloat("ThreatRange", ThreatRange);
-            SteeringBehaviorsShader.SetFloat("NeighbourhoodRange", NeighbourhoodRange);
+            SteeringBehaviorsShader.SetFloat("NeighborhoodRange", NeighborhoodRange);
 
             SteeringBehaviorsShader.SetFloat("FleeWeight", FleeWeight);
             SteeringBehaviorsShader.SetFloat("CohesionWeight", CohesionWeight);
             SteeringBehaviorsShader.SetFloat("AlignmentWeight", AlignmentWeight);
             SteeringBehaviorsShader.SetFloat("SeparationWeight", SeparationWeight);
 
-            boidDataBuffer.SetData(boidsData);
+
         }
 
         private void DispatchAndUpdateData()
