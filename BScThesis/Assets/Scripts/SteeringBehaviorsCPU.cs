@@ -8,13 +8,15 @@ namespace SteeringBehaviorsNS
 
     public class SteeringBehaviorsCPU : MonoBehaviour
     {
+        public Transform Threat;
+
         public float WanderWeight;
         public float FleeWeight;
         public float SeparationWeight;
         public float CohesionWeight;
         public float AlignmentWeight;
         
-        public float NeighbourhoodRange;
+        public float NeighborhoodRange;
 
         private Vector2 wanderTarget;
         private float wanderRadius;
@@ -26,10 +28,10 @@ namespace SteeringBehaviorsNS
         private Vector2 acceleration;
         private Vector2 velocity;
         private Boid boid;
-        private Threat threat;
 
         private List<Boid> otherBoids;
-        public List<int> neighborsTags;
+        private List<int> neighborsTags;
+
 
         
         // Use this for initialization
@@ -39,7 +41,6 @@ namespace SteeringBehaviorsNS
             wanderDistance = 4.0f;
             wanderJitter = 6.0f;
             boid = GetComponent<Boid>();
-            threat = FindObjectOfType<Threat>();
 
             otherBoids = new List<Boid>(FindObjectsOfType<Boid>());
             otherBoids.Remove(this.boid);
@@ -48,7 +49,7 @@ namespace SteeringBehaviorsNS
 
             velocity = Vector2.zero;
 
-            if (GetComponent<Threat>())
+            if (boid.IsThreat)
             {
                 //stuff for the wander behavior
                 float theta = Random.value * Mathf.PI * 2.0f;
@@ -71,9 +72,10 @@ namespace SteeringBehaviorsNS
             // get F
             steeringForce = CalculateForce();
 
+            // a = F/m
             acceleration = steeringForce / boid.Mass;
 
-            // v = v + F/m * t
+            // v = v + a * t
             velocity += acceleration * Time.deltaTime;
 
             // v <= vmax
@@ -86,7 +88,7 @@ namespace SteeringBehaviorsNS
         {
             steeringForce = Vector2.zero;
 
-            if (GetComponent<Threat>())
+            if (boid.IsThreat)
                 steeringForce += WanderWeight * Wander();
             else
             {
@@ -95,9 +97,9 @@ namespace SteeringBehaviorsNS
                 steeringForce += AlignmentWeight * Alignment();
                 steeringForce += CohesionWeight * Cohesion();
                 
-                if ((boid.transform.position - threat.transform.position).magnitude < threat.GetComponent<Threat>().FearRange)
+                if ((boid.transform.position - Threat.position).magnitude < Threat.GetComponent<Boid>().ThreatRange)
                 {
-                    steeringForce += FleeWeight * Flee(threat.transform.position);
+                    steeringForce += FleeWeight * Flee(Threat.position);
                 }
 
             }
@@ -111,7 +113,7 @@ namespace SteeringBehaviorsNS
 
             for (int i = 0; i < otherBoids.Count; i++)
             {
-                if ((otherBoids[i].transform.position - this.transform.position).magnitude <= NeighbourhoodRange)
+                if ((otherBoids[i].transform.position - this.transform.position).magnitude <= NeighborhoodRange)
                 {
                     neighborsTags.Add(i);
                 }

@@ -9,22 +9,10 @@ namespace SteeringBehaviorsNS
 
     public class SteeringBehaviorsGPU : MonoBehaviour
     {
-        struct BoidData
-        {
-            public Vector2 pos;
-            public Vector2 vel;
-        }
-
-        private readonly int structSize = 4 * sizeof(float);
-        private ComputeBuffer boidDataBuffer;
-        //private ComputeBuffer debugBuffer;
-        private List<Boid> boids;
-        private BoidData[] boidsData;
-        //public Vector2[] debugData;
-        private Threat threat;
-
         public ComputeShader SteeringBehaviorsShader;
-        
+        public Transform Threat;
+
+        public float BoidMass;
         public float MaxBoidSpeed;
         public float ThreatRange;
         public float NeighborhoodRange;
@@ -34,16 +22,19 @@ namespace SteeringBehaviorsNS
         public float AlignmentWeight;
         public float SeparationWeight;
 
+        struct BoidData
+        {
+            public Vector2 pos;
+            public Vector2 vel;
+        }
+        
+        private List<Boid> boids;
+        private BoidData[] boidsData;
+        private ComputeBuffer boidDataBuffer;
 
         // Use this for initialization
         void Start()
         {
-            boids = FindObjectsOfType<Boid>().ToList();
-            threat = FindObjectOfType<Threat>();
-            boids.Remove(threat.GetComponent<Boid>());
-            boidDataBuffer = new ComputeBuffer(boids.Count, structSize);
-            //debugBuffer = new ComputeBuffer(boids.Count, 2* sizeof(float));
-            
             InitializeData();
         }
 
@@ -56,6 +47,10 @@ namespace SteeringBehaviorsNS
 
         private void InitializeData()
         {
+            boids = FindObjectsOfType<Boid>().ToList();
+            boids.Remove(Threat.GetComponent<Boid>());
+            boidDataBuffer = new ComputeBuffer(boids.Count, 4 * sizeof(float));
+
             boidsData = new BoidData[boids.Count];
 
             for (int i = 0; i < boids.Count; i++)
@@ -68,16 +63,14 @@ namespace SteeringBehaviorsNS
                 boidsData[i] = bd;
             }
 
-            //debugData = new Vector2[boids.Count];
-
             boidDataBuffer.SetData(boidsData);
 
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
-            //SteeringBehaviorsShader.SetBuffer(kernelIndex, "DebugBuffer", debugBuffer);
 
-            SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
             SteeringBehaviorsShader.SetInt("BoidCount", boidDataBuffer.count);
+            SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
+            SteeringBehaviorsShader.SetFloat("BoidMass", BoidMass);
             SteeringBehaviorsShader.SetFloat("ThreatRange", ThreatRange);
             SteeringBehaviorsShader.SetFloat("NeighborhoodRange", NeighborhoodRange);
 
@@ -90,22 +83,20 @@ namespace SteeringBehaviorsNS
         private void DispatchAndUpdateData()
         {
             SteeringBehaviorsShader.SetFloat("DeltaTime", Time.deltaTime);
-            SteeringBehaviorsShader.SetVector("ThreatPosition", (Vector2)threat.transform.position);
+            SteeringBehaviorsShader.SetVector("ThreatPosition", (Vector2)Threat.position);
 
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
-            SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
+            SteeringBehaviorsShader.Dispatch(kernelIndex, boids.Count/1, 1, 1);
 
             boidDataBuffer.GetData(boidsData);
-            //debugBuffer.GetData(debugData);
         }
 
         private void MoveBoids()
         {
             for (int i = 0; i < boids.Count; i++)
             {
-                boids[i].transform.position = boidsData[i].pos; // for position update
-                boids[i].Velocity = boidsData[i].vel;           // for rotation
-                //boids[i].DebugValueGPU = debugData[i];
+                boids[i].transform.position = boidsData[i].pos;
+                boids[i].Velocity = boidsData[i].vel;
             }
         }
 

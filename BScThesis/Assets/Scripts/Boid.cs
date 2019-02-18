@@ -7,21 +7,21 @@ namespace SteeringBehaviorsNS
 
     public class Boid : MonoBehaviour
     {
-        public Vector2 Velocity;
-        public Vector2 Heading;
+        public bool IsThreat;
+        public float ThreatRange;
+
+        public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
+        public SteeringBehaviorsGPU SteeringBehaviorsGPU { get; set; }
+        public Vector2 Velocity { get; set; }
+        public Vector2 Heading { get; set; }
 
         public float Mass;
         public float MaxSpeed;
         public float MaxForce;
         public float MaxTurnRate;
+        
 
         private int frameCount;
-        private float startTime;
-
-        public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
-        public SteeringBehaviorsGPU SteeringBehaviorsGPU { get; set; }
-
-        public Vector2 DebugValueGPU;
 
         // Use this for initialization
         void Start()
@@ -36,12 +36,12 @@ namespace SteeringBehaviorsNS
         // Update is called once per frame
         void Update()
         {
-            if (frameCount == 0 && GetComponent<Threat>())
+            if (frameCount == 0 && IsThreat)
             {
                 Debug.Log("Start: " + Time.realtimeSinceStartup);
             }
 
-            if (GetComponent<Threat>() || SteeringBehaviorsGPU == null)
+            if (IsThreat || SteeringBehaviorsGPU == null)
             {
                 Velocity = SteeringBehaviorsCPU.UpdateVelocity();
                 Move();
@@ -51,15 +51,15 @@ namespace SteeringBehaviorsNS
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
             
-            if (frameCount == 100 && GetComponent<Threat>())
+            if (frameCount == 100 && IsThreat)
             {
                 Debug.Log("100 frames: " + Time.realtimeSinceStartup);
             }
-            if (frameCount == 500 && GetComponent<Threat>())
+            if (frameCount == 500 && IsThreat)
             {
                 Debug.Log("500 frames: " + Time.realtimeSinceStartup);
             }
-            if (frameCount == 1000 && GetComponent<Threat>())
+            if (frameCount == 1000 && IsThreat)
             {
                 Debug.Log("1000 frames: " + Time.realtimeSinceStartup);
             }
