@@ -21,6 +21,8 @@ namespace SteeringBehaviorsNS
         public SteeringBehaviorsCPU SteeringBehaviorsCPU { get; set; }
         public SteeringBehaviorsGPU SteeringBehaviorsGPU { get; set; }
 
+        public Vector2 DebugValueGPU;
+
         // Use this for initialization
         void Start()
         {
@@ -34,9 +36,11 @@ namespace SteeringBehaviorsNS
         // Update is called once per frame
         void Update()
         {
-            if (frameCount == 0)
-                startTime = Time.realtimeSinceStartup;
-            
+            if (frameCount == 0 && GetComponent<Threat>())
+            {
+                Debug.Log("Start: " + Time.realtimeSinceStartup);
+            }
+
             if (GetComponent<Threat>() || SteeringBehaviorsGPU == null)
             {
                 Velocity = SteeringBehaviorsCPU.UpdateVelocity();
@@ -46,13 +50,20 @@ namespace SteeringBehaviorsNS
             // Rotate the boid
             RotateHeadingToFacePosition((Vector2)transform.position + Velocity);
             RotateBoidToMatchHeading();
-
-            if (frameCount == 1000)
+            
+            if (frameCount == 100 && GetComponent<Threat>())
             {
-                Debug.Log(startTime + " " + Time.realtimeSinceStartup);
-                frameCount++;
+                Debug.Log("100 frames: " + Time.realtimeSinceStartup);
             }
-            else frameCount++;
+            if (frameCount == 500 && GetComponent<Threat>())
+            {
+                Debug.Log("500 frames: " + Time.realtimeSinceStartup);
+            }
+            if (frameCount == 1000 && GetComponent<Threat>())
+            {
+                Debug.Log("1000 frames: " + Time.realtimeSinceStartup);
+            }
+            frameCount++;
         }
 
         void Move()

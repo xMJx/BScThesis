@@ -17,8 +17,10 @@ namespace SteeringBehaviorsNS
 
         private readonly int structSize = 4 * sizeof(float);
         private ComputeBuffer boidDataBuffer;
+        //private ComputeBuffer debugBuffer;
         private List<Boid> boids;
         private BoidData[] boidsData;
+        //public Vector2[] debugData;
         private Threat threat;
 
         public ComputeShader SteeringBehaviorsShader;
@@ -40,6 +42,8 @@ namespace SteeringBehaviorsNS
             threat = FindObjectOfType<Threat>();
             boids.Remove(threat.GetComponent<Boid>());
             boidDataBuffer = new ComputeBuffer(boids.Count, structSize);
+            //debugBuffer = new ComputeBuffer(boids.Count, 2* sizeof(float));
+            
             InitializeData();
         }
 
@@ -64,10 +68,13 @@ namespace SteeringBehaviorsNS
                 boidsData[i] = bd;
             }
 
+            //debugData = new Vector2[boids.Count];
+
             boidDataBuffer.SetData(boidsData);
 
             int kernelIndex = SteeringBehaviorsShader.FindKernel("CSMain");
             SteeringBehaviorsShader.SetBuffer(kernelIndex, "BoidDataBuffer", boidDataBuffer);
+            //SteeringBehaviorsShader.SetBuffer(kernelIndex, "DebugBuffer", debugBuffer);
 
             SteeringBehaviorsShader.SetFloat("MaxBoidSpeed", MaxBoidSpeed);
             SteeringBehaviorsShader.SetInt("BoidCount", boidDataBuffer.count);
@@ -78,8 +85,6 @@ namespace SteeringBehaviorsNS
             SteeringBehaviorsShader.SetFloat("CohesionWeight", CohesionWeight);
             SteeringBehaviorsShader.SetFloat("AlignmentWeight", AlignmentWeight);
             SteeringBehaviorsShader.SetFloat("SeparationWeight", SeparationWeight);
-
-
         }
 
         private void DispatchAndUpdateData()
@@ -91,6 +96,7 @@ namespace SteeringBehaviorsNS
             SteeringBehaviorsShader.Dispatch(kernelIndex, 1, 1, 1);
 
             boidDataBuffer.GetData(boidsData);
+            //debugBuffer.GetData(debugData);
         }
 
         private void MoveBoids()
@@ -99,6 +105,7 @@ namespace SteeringBehaviorsNS
             {
                 boids[i].transform.position = boidsData[i].pos; // for position update
                 boids[i].Velocity = boidsData[i].vel;           // for rotation
+                //boids[i].DebugValueGPU = debugData[i];
             }
         }
 
